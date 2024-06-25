@@ -6,48 +6,31 @@ use App\WampClient\WampClient;
 use App\WampServer\WampTopic;
 use Psr\Log\NullLogger;
 use React\EventLoop\Loop;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Thruway\Logging\Logger;
 
+#[AsCommand(name: 'app:message:send')]
 class SendMessageCommand extends Command
 {
-    private WampClient $wampClient;
-
-    private WampTopic $wampTopic;
-
-    protected static $defaultName = 'app:send-message';
-
-    public function __construct(string $name = null)
+    public function __construct(
+        private readonly WampClient $wampClient,
+        private readonly WampTopic $wampTopic,
+    )
     {
-        parent::__construct($name);
+        parent::__construct();
         Logger::set(new NullLogger());
     }
 
-    public function configure()
+    public function configure(): void
     {
         $this->addArgument('message', InputArgument::REQUIRED, 'Message you want to send');
     }
 
-    /** @required */
-    public function setWampClient(WampClient $wampClient): self
-    {
-        $this->wampClient = $wampClient;
-
-        return $this;
-    }
-
-    /** @required */
-    public function setWampTopic(WampTopic $wampTopic): self
-    {
-        $this->wampTopic = $wampTopic;
-
-        return $this;
-    }
-
-    public function execute(InputInterface $input, OutputInterface $output)
+    public function execute(InputInterface $input, OutputInterface $output): int
     {
         $message = $input->getArgument('message');
         $this->wampClient->on('open', function() use ($message, $input, $output) {
@@ -64,7 +47,7 @@ class SendMessageCommand extends Command
                 Loop::get()->stop();
             });
         });
-        $this->wampClient->start(true);
+        $this->wampClient->start();
 
         return Command::SUCCESS;
     }

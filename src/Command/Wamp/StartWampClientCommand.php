@@ -7,6 +7,7 @@ use App\WampServer\WampTopic;
 use Psr\Log\NullLogger;
 use React\EventLoop\Loop;
 use React\Promise\PromiseInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -14,34 +15,18 @@ use Symfony\Component\Console\Question\Question;
 use Thruway\ClientSession;
 use Thruway\Logging\Logger;
 
+#[AsCommand('app:message:read')]
 class StartWampClientCommand extends Command
 {
-    protected static $defaultName = 'app:read-message';
 
-    private WampTopic $wampTopic;
 
-    private WampClient $wampClient;
-
-    public function __construct()
+    public function __construct(
+        private readonly WampTopic  $wampTopic,
+        private readonly WampClient $wampClient,
+    )
     {
         parent::__construct();
         Logger::set(new NullLogger());
-    }
-
-    /** @required */
-    public function setWampTopic(WampTopic $wampTopic): self
-    {
-        $this->wampTopic = $wampTopic;
-
-        return $this;
-    }
-
-    /** @required */
-    public function setWampClient(WampClient $wampClient): self
-    {
-        $this->wampClient = $wampClient;
-
-        return $this;
     }
 
     public function execute(InputInterface $input, OutputInterface $output): int
